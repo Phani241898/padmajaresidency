@@ -1,30 +1,52 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Apartment Data</title>
+  <title>Apartment Management</title>
+  <style>
+    body { font-family: Arial; padding: 20px; }
+    input, button { margin: 5px; padding: 8px; }
+    table { border-collapse: collapse; margin-top: 20px; }
+    td, th { border: 1px solid black; padding: 8px; }
+  </style>
 </head>
+
 <body>
 
-<h2>Flat Details</h2>
+<h2>Flat Entry</h2>
 
-<input id="flat" placeholder="Flat No">
+<input id="flat" placeholder="Flat Number">
 <input id="owner" placeholder="Owner Name">
-<button onclick="addData()">Add</button>
+<input id="phone" placeholder="Phone">
+<input id="notes" placeholder="Notes">
 
-<table border="1" id="table">
-<tr><th>Flat</th><th>Owner</th></tr>
+<button onclick="submitData()">Submit</button>
+
+<h2>All Data</h2>
+<table id="table">
+<tr>
+<th>Flat</th><th>Owner</th><th>Phone</th><th>Notes</th>
+</tr>
 </table>
 
-<button onclick="window.print()">Download as PDF</button>
+<button onclick="window.print()">Download PDF</button>
 
 <script>
-function addData(){
-  let flat = document.getElementById("flat").value;
-  let owner = document.getElementById("owner").value;
+const scriptURL = "https://script.google.com/macros/s/AKfycbyPaoou9lKUphHA2bRA_iaTnNgcr64KYDQveId6R4xlla0edi54ddJRV0HnzRAfQ2Ti/exec";
 
-  let row = document.createElement("tr");
-  row.innerHTML = `<td>${flat}</td><td>${owner}</td>`;
-  document.getElementById("table").appendChild(row);
+function submitData() {
+  const data = {
+    flat: document.getElementById("flat").value,
+    owner: document.getElementById("owner").value,
+    phone: document.getElementById("phone").value,
+    notes: document.getElementById("notes").value
+  };
+
+  fetch(scriptURL, {
+    method: "POST",
+    body: JSON.stringify(data)
+  })
+  .then(res => alert("Saved successfully!"))
+  .catch(err => alert("Error"));
 }
 </script>
 
