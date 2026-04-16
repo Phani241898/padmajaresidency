@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Ower Details</title>
+  <title>Padmaja Residency Owner Details</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <style>
@@ -81,8 +81,8 @@
       width: 100%;
       border-collapse: collapse;
       margin-top: 15px;
-      overflow: hidden;
       border-radius: 10px;
+      overflow: hidden;
     }
 
     th {
@@ -125,7 +125,7 @@
 <div class="container">
 
   <div class="card">
-    <h2>Entry your flat details</h2>
+    <h2>Add your Flat Details</h2>
 
     <div class="form-grid">
       <input id="flat" placeholder="Flat Number">
@@ -166,36 +166,66 @@ function loadData() {
         <th>Flat</th><th>Owner</th><th>Phone</th><th>Notes</th>
       </tr>`;
 
-      for (let i = 1; i < data.length; i++) {
+      let rows = data.slice(1);
+
+      // SORT ASCENDING
+      rows.sort((a, b) => {
+        return a[0].localeCompare(b[0], undefined, { numeric: true, sensitivity: 'base' });
+      });
+
+      rows.forEach(rowData => {
         let row = `<tr>
-          <td>${data[i][0]}</td>
-          <td>${data[i][1]}</td>
-          <td>${data[i][2]}</td>
-          <td>${data[i][3]}</td>
+          <td>${rowData[0]}</td>
+          <td>${rowData[1]}</td>
+          <td>${rowData[2]}</td>
+          <td>${rowData[3]}</td>
         </tr>`;
         table.innerHTML += row;
-      }
+      });
     });
 }
 
-// SUBMIT DATA
+// SUBMIT DATA WITH DUPLICATE CHECK
 function submitData() {
-  const data = {
-    flat: document.getElementById("flat").value.toUpperCase(),
-    owner: document.getElementById("owner").value.toUpperCase(),
-    phone: document.getElementById("phone").value,
-    notes: document.getElementById("notes").value
-  };
+  const flat = document.getElementById("flat").value.trim().toUpperCase();
+  const owner = document.getElementById("owner").value.trim().toUpperCase();
+  const phone = document.getElementById("phone").value.trim().toUpperCase();
+  const notes = document.getElementById("notes").value.trim().toUpperCase();
 
-  fetch(scriptURL, {
-    method: "POST",
-    body: JSON.stringify(data)
-  })
-  .then(res => {
-    alert("Saved successfully!");
-    loadData();
-  })
-  .catch(err => alert("Error"));
+  if (!flat || !owner) {
+    alert("Flat and Owner are required");
+    return;
+  }
+
+  // CHECK DUPLICATE
+  fetch(scriptURL)
+    .then(res => res.json())
+    .then(existingData => {
+
+      let rows = existingData.slice(1);
+
+      let duplicate = rows.some(row => 
+        row[0].toString().trim().toUpperCase() === flat
+      );
+
+      if (duplicate) {
+        alert("Flat number already exists!");
+        return;
+      }
+
+      // SAVE DATA
+      const data = { flat, owner, phone, notes };
+
+      fetch(scriptURL, {
+        method: "POST",
+        body: JSON.stringify(data)
+      })
+      .then(res => {
+        alert("Saved successfully!");
+        loadData();
+      })
+      .catch(err => alert("Error"));
+    });
 }
 
 window.onload = loadData;
