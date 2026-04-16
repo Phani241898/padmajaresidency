@@ -31,8 +31,35 @@
 <button onclick="window.print()">Download PDF</button>
 
 <script>
-const scriptURL = "https://script.google.com/macros/s/AKfycbyPaoou9lKUphHA2bRA_iaTnNgcr64KYDQveId6R4xlla0edi54ddJRV0HnzRAfQ2Ti/exec";
+const scriptURL = "https://script.google.com/macros/s/AKfycbyQ1LmLzeAYS85xzamIdWC1rU0Io9K6eryOnhg07BSsdPZ73xoX769Upd1OGhW3LzQ7/exec";
 
+// LOAD DATA
+function loadData() {
+  fetch(scriptURL)
+    .then(res => res.json())
+    .then(data => {
+      const table = document.getElementById("table");
+
+      // Clear old rows except header
+      table.innerHTML = `
+      <tr>
+        <th>Flat</th><th>Owner</th><th>Phone</th><th>Notes</th>
+      </tr>`;
+
+      // Skip header row from sheet
+      for (let i = 1; i < data.length; i++) {
+        let row = `<tr>
+          <td>${data[i][0]}</td>
+          <td>${data[i][1]}</td>
+          <td>${data[i][2]}</td>
+          <td>${data[i][3]}</td>
+        </tr>`;
+        table.innerHTML += row;
+      }
+    });
+}
+
+// SUBMIT DATA
 function submitData() {
   const data = {
     flat: document.getElementById("flat").value,
@@ -45,9 +72,15 @@ function submitData() {
     method: "POST",
     body: JSON.stringify(data)
   })
-  .then(res => alert("Saved successfully!"))
+  .then(res => {
+    alert("Saved successfully!");
+    loadData(); // refresh table
+  })
   .catch(err => alert("Error"));
 }
+
+// Load data on page open
+window.onload = loadData;
 </script>
 
 </body>
