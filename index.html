@@ -1,199 +1,72 @@
 <!DOCTYPE html>
 <html>
 <head>
-  
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-  <!-- PDF Libraries -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
-
-  <style>
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto;
-      background: #f2f4f7;
-      margin: 0;
-    }
-
-    .container {
-      max-width: 420px;
-      margin: auto;
-      padding: 15px;
-    }
-
-    h2 {
-      text-align: center;
-    }
-
-    .card {
-      background: white;
-      padding: 15px;
-      border-radius: 12px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-      margin-bottom: 15px;
-    }
-
-    input {
-      width: 100%;
-      padding: 10px;
-      margin-bottom: 10px;
-      border-radius: 8px;
-      border: 1px solid #ccc;
-    }
-
-    .btn {
-      width: 100%;
-      padding: 10px;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      margin-bottom: 10px;
-    }
-
-    .btn-add { background: #007bff; color: white; }
-    .btn-pdf { background: #28a745; color: white; }
-
-    .list-item {
-      background: white;
-      padding: 12px;
-      border-radius: 10px;
-      margin-bottom: 10px;
-      display: flex;
-      justify-content: space-between;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.08);
-    }
-
-    .actions button {
-      margin-left: 5px;
-      border: none;
-      padding: 6px 10px;
-      border-radius: 6px;
-      cursor: pointer;
-    }
-
-    .edit { background: #ffc107; }
-    .delete { background: #dc3545; color: white; }
-  </style>
+    <title>Flat Details</title>
+    <style>
+        body { font-family: Arial; padding: 20px; }
+        input { padding: 8px; margin: 5px; }
+        button { padding: 8px 12px; }
+        table { border-collapse: collapse; margin-top: 20px; width: 50%; }
+        th, td { border: 1px solid black; padding: 10px; text-align: center; }
+    </style>
 </head>
-
 <body>
 
-<div class="container">
+<h2>Flat Details Entry</h2>
 
-  <h2>🏢 Owner Details</h2>
+<input type="text" id="flat" placeholder="Flat Number">
+<input type="text" id="owner" placeholder="Owner Name">
+<button onclick="saveData()">Save</button>
 
-  <div class="card">
-    <input id="flat" placeholder="Flat Number"
-           oninput="this.value = this.value.toUpperCase()">
-    <input id="owner" placeholder="Owner Name"
-           oninput="this.value = this.value.toUpperCase()">
-
-    <button class="btn btn-add" onclick="addFlat()">Add / Update</button>
-    <button class="btn btn-pdf" onclick="downloadPDF()">Download PDF</button>
-  </div>
-
-  <div id="list"></div>
-
-</div>
+<table>
+    <thead>
+        <tr>
+            <th>Flat Number</th>
+            <th>Owner Name</th>
+        </tr>
+    </thead>
+    <tbody id="tableData"></tbody>
+</table>
 
 <script>
-let editIndex = -1;
+function saveData() {
+    let flat = document.getElementById("flat").value.toUpperCase();
+    let owner = document.getElementById("owner").value.toUpperCase();
 
-function getData() {
-  return JSON.parse(localStorage.getItem("flats")) || [];
-}
+    if (!flat || !owner) {
+        alert("Enter all details");
+        return;
+    }
 
-function saveData(data) {
-  localStorage.setItem("flats", JSON.stringify(data));
+    let data = JSON.parse(localStorage.getItem("flats")) || [];
+    data.push({flat, owner});
+
+    // Sort ascending
+    data.sort((a, b) => a.flat.localeCompare(b.flat));
+
+    localStorage.setItem("flats", JSON.stringify(data));
+
+    loadData();
+
+    document.getElementById("flat").value = "";
+    document.getElementById("owner").value = "";
 }
 
 function loadData() {
-  let data = getData();
+    let data = JSON.parse(localStorage.getItem("flats")) || [];
+    let table = document.getElementById("tableData");
+    table.innerHTML = "";
 
-  data.sort((a, b) => a.flat.localeCompare(b.flat, undefined, { numeric: true }));
-
-  let list = document.getElementById("list");
-  list.innerHTML = "";
-
-  data.forEach((item, index) => {
-    let div = document.createElement("div");
-    div.className = "list-item";
-
-    div.innerHTML = `
-      <div>
-        <strong>${item.flat}</strong><br>${item.owner}
-      </div>
-      <div class="actions">
-        <button class="edit" onclick="editFlat(${index})">Edit</button>
-        <button class="delete" onclick="deleteFlat(${index})">Delete</button>
-      </div>
-    `;
-
-    list.appendChild(div);
-  });
+    data.forEach(item => {
+        let row = `<tr>
+            <td>${item.flat}</td>
+            <td>${item.owner}</td>
+        </tr>`;
+        table.innerHTML += row;
+    });
 }
 
-function addFlat() {
-  let flat = document.getElementById("flat").value.toUpperCase();
-  let owner = document.getElementById("owner").value.toUpperCase();
-
-  if (!flat || !owner) {
-    alert("Enter both fields");
-    return;
-  }
-
-  let data = getData();
-
-  if (editIndex === -1) {
-    data.push({ flat, owner });
-  } else {
-    data[editIndex] = { flat, owner };
-    editIndex = -1;
-  }
-
-  saveData(data);
-
-  document.getElementById("flat").value = "";
-  document.getElementById("owner").value = "";
-
-  loadData();
-}
-
-function editFlat(index) {
-  let data = getData();
-  document.getElementById("flat").value = data[index].flat;
-  document.getElementById("owner").value = data[index].owner;
-  editIndex = index;
-}
-
-function deleteFlat(index) {
-  let data = getData();
-  data.splice(index, 1);
-  saveData(data);
-  loadData();
-}
-
-function downloadPDF() {
-  let data = getData();
-
-  data.sort((a, b) => a.flat.localeCompare(b.flat, undefined, { numeric: true }));
-
-  const { jsPDF } = window.jspdf;
-  let doc = new jsPDF();
-
-  let tableData = data.map(item => [item.flat, item.owner]);
-
-  doc.text("Flat Details", 14, 10);
-
-  doc.autoTable({
-    head: [["Flat Number", "Owner Name"]],
-    body: tableData,
-    startY: 20
-  });
-
-  doc.save("Flat_Details.pdf");
-}
-
+// Load data on page open
 loadData();
 </script>
 
